@@ -10,8 +10,6 @@ listing admins, setting special limits, and creating a config and more...
 import asyncio
 import os
 import sys
-import time
-import logging
 
 try:
     from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
@@ -23,7 +21,6 @@ try:
         MessageHandler,
         filters,
     )
-    from telegram.error import NetworkError, TimedOut, RetryAfter
 except ImportError:
     print(
         "Module 'python-telegram-bot' is not installed. Use:"
@@ -246,6 +243,21 @@ async def start(update: Update, _context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_html(text=START_MESSAGE, reply_markup=MAIN_KEYBOARD)
 
 
+async def spernet_info(update: Update, _context: ContextTypes.DEFAULT_TYPE):
+    """نمایش کارت برند سپرنت (مینیمال و تمیز)."""
+    await update.message.reply_html(
+        text=(
+            "🛡️ <b>سپرنت</b>\n"
+            "راهکار مدیریت و پایش هوشمند کاربران.\n"
+            "— نسخه‌ی ربات: <b>1.0</b>\n\n"
+            "برای شروع: /start\n"
+            "تنظیمات سریع: /create_config\n"
+            "پشتیبان‌گیری: /backup\n"
+        ),
+        reply_markup=MAIN_KEYBOARD,
+    )
+
+
 async def create_config(update: Update, _context: ContextTypes.DEFAULT_TYPE):
     """
     Add panel domain, username, and password to add into the config file.
@@ -388,7 +400,9 @@ async def get_password(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 
 async def add_admin(update: Update, _context: ContextTypes.DEFAULT_TYPE):
-    """Adds an admin to the bot."""
+    """
+    Adds an admin to the bot.
+    """
     check = await check_admin_privilege(update)
     if check:
         return check
@@ -413,7 +427,9 @@ async def add_admin(update: Update, _context: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_chat_id(update: Update, _context: ContextTypes.DEFAULT_TYPE):
-    """Adds a new admin if the provided chat ID is valid and not already an admin."""
+    """
+    Adds a new admin if the provided chat ID is valid and not already an admin.
+    """
     new_admin_id = update.message.text.strip()
     try:
         if await add_admin_to_config(new_admin_id):
@@ -439,7 +455,9 @@ async def get_chat_id(update: Update, _context: ContextTypes.DEFAULT_TYPE):
 
 
 async def admins_list(update: Update, _context: ContextTypes.DEFAULT_TYPE):
-    """Sends a list of current admins."""
+    """
+    Sends a list of current admins.
+    """
     check = await check_admin_privilege(update)
     if check:
         return check
@@ -466,11 +484,13 @@ async def remove_admin(update: Update, _context: ContextTypes.DEFAULT_TYPE):
         return check
 
     admins_count = len(await check_admin())
+    # جلوگیری قطعی از حذف آخرین ادمین
     if admins_count <= 1:
         await update.message.reply_html(
             text=(
-                "⚠️ <ب>هشدار!</ب>\n\n"
-                "فقط <b>1</b> ادمین فعال باقی مانده است. برای حذف، ابتدا یک ادمین جدید اضافه کنید."
+                "⚠️ <b>هشدار!</b>\n\n"
+                "فقط <b>1</b> ادمین فعال باقی مانده است. "
+                "برای حذف، ابتدا یک ادمین جدید اضافه کنید."
             ),
             reply_markup=MAIN_KEYBOARD,
         )
@@ -512,29 +532,41 @@ async def get_chat_id_to_remove(update: Update, _context: ContextTypes.DEFAULT_T
 
 
 async def set_special_limit(update: Update, _context: ContextTypes.DEFAULT_TYPE):
-    """Set a special limit for a user."""
+    """
+    Set a special limit for a user.
+    """
     check = await check_admin_privilege(update)
     if check:
         return check
 
     await update.message.reply_html(
-        text=("🎯 <b>تنظیم محدودیت ویژه</b>\n\n👤 لطفاً نام کاربری را وارد کنید.\nمثال: <code>Test_User</code>"),
+        text=(
+            "🎯 <b>تنظیم محدودیت ویژه</b>\n\n"
+            "👤 لطفاً نام کاربری را وارد کنید.\nمثال: <code>Test_User</code>"
+        ),
         reply_markup=ReplyKeyboardRemove(),
     )
     return GET_SPECIAL_LIMIT
 
 
 async def get_special_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Get the number of limit for a user."""
+    """
+    Get the number of limit for a user.
+    """
     context.user_data["selected_user"] = update.message.text.strip()
     await update.message.reply_html(
-        text=("🔢 <b>تعداد محدودیت</b>\n\nلطفاً تعداد IP مجاز برای این کاربر را وارد کنید.\nمثال: <code>4</code> یا <code>2</code>")
+        text=(
+            "🔢 <b>تعداد محدودیت</b>\n\n"
+            "لطفاً تعداد IP مجاز برای این کاربر را وارد کنید.\nمثال: <code>4</code> یا <code>2</code>"
+        )
     )
     return GET_LIMIT_NUMBER
 
 
 async def get_limit_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Sets the special limit for a user if the provided input is a valid number."""
+    """
+    Sets the special limit for a user if the provided input is a valid number.
+    """
     try:
         context.user_data["limit_number"] = int(update.message.text.strip())
     except ValueError:
@@ -580,12 +612,17 @@ async def show_special_limit_function(update: Update, _context: ContextTypes.DEF
 
     out_put = await get_special_limit_list()
     if out_put:
-        await update.message.reply_html(text="📊 <b>لیست محدودیت‌های ویژه:</b>\n", reply_markup=MAIN_KEYBOARD)
+        await update.message.reply_html(
+            text="📊 <b>لیست محدودیت‌های ویژه:</b>\n", reply_markup=MAIN_KEYBOARD
+        )
         for user in out_put:
             await update.message.reply_html(text=f"🎯 {user}")
     else:
         await update.message.reply_html(
-            text=("❌ <b>هیچ محدودیت ویژه‌ای یافت نشد!</b>\n\nبرای تنظیم محدودیت ویژه از دستور /set_special_limit استفاده کنید."),
+            text=(
+                "❌ <b>هیچ محدودیت ویژه‌ای یافت نشد!</b>\n\n"
+                "برای تنظیم محدودیت ویژه از دستور /set_special_limit استفاده کنید."
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
 
@@ -637,7 +674,11 @@ async def send_backup(update: Update, _context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_document(
             document=open("config.json", "rb"),  # pylint: disable=consider-using-with
-            caption=("💾 <b>فایل پشتیبان</b>\n\n✅ این فایل حاوی تمام تنظیمات ربات شماست!\n🔒 لطفاً آن را در مکان امنی نگهداری کنید."),
+            caption=(
+                "💾 <b>فایل پشتیبان</b>\n\n"
+                "✅ این فایل حاوی تمام تنظیمات ربات شماست!\n"
+                "🔒 لطفاً آن را در مکان امنی نگهداری کنید."
+            ),
             reply_markup=MAIN_KEYBOARD,
             parse_mode="HTML",
         )
@@ -655,8 +696,11 @@ async def set_except_users(update: Update, _context: ContextTypes.DEFAULT_TYPE):
         return check
 
     await update.message.reply_html(
-        text=("✅ <b>افزودن کاربر استثنا</b>\n\n👤 نام کاربری که می‌خواهید به لیست استثنا اضافه کنید را ارسال کنید:\n\n"
-              "💡 <b>نکته:</b> کاربران موجود در این لیست هیچ محدودیتی نخواهند داشت."),
+        text=(
+            "✅ <ب>افزودن کاربر استثنا</ب>\n\n"
+            "👤 نام کاربری که می‌خواهید به لیست استثنا اضافه کنید را ارسال کنید:\n\n"
+            "💡 <b>نکته:</b> کاربران موجود در این لیست هیچ محدودیتی نخواهند داشت."
+        ).replace("<ب>", "<b>").replace("</ب>", "</b>"),
         reply_markup=ReplyKeyboardRemove(),
     )
     return SET_EXCEPT_USERS
@@ -680,7 +724,10 @@ async def remove_except_user(update: Update, _context: ContextTypes.DEFAULT_TYPE
         return check
 
     await update.message.reply_html(
-        text=("🚫 <b>حذف کاربر از استثنا</b>\n\n👤 نام کاربری که می‌خواهید از لیست استثنا حذف کنید را ارسال کنید:"),
+        text=(
+            "🚫 <b>حذف کاربر از استثنا</b>\n\n"
+            "👤 نام کاربری که می‌خواهید از لیست استثنا حذف کنید را ارسال کنید:"
+        ),
         reply_markup=ReplyKeyboardRemove(),
     )
     return REMOVE_EXCEPT_USER
@@ -692,14 +739,18 @@ async def remove_except_user_handler(update: Update, _context: ContextTypes.DEFA
     except_user = await remove_except_user_from_config(user_input)
     if except_user:
         await update.message.reply_html(
-            text=("✅ <b>حذف موفق!</b>\n\n"
-                  f"کاربر <code>{user_input}</code> با موفقیت از لیست استثنا حذف شد! 🗑️"),
+            text=(
+                "✅ <b>حذف موفق!</b>\n\n"
+                f"کاربر <code>{user_input}</code> با موفقیت از لیست استثنا حذف شد! 🗑️"
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
     else:
         await update.message.reply_html(
-            text=("❌ <b>کاربر یافت نشد!</b>\n\n"
-                  f"کاربر <code>{user_input}</code> در لیست استثنا وجود ندارد!"),
+            text=(
+                "❌ <b>کاربر یافت نشد!</b>\n\n"
+                f"کاربر <code>{user_input}</code> در لیست استثنا وجود ندارد!"
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
     return ConversationHandler.END
@@ -721,8 +772,10 @@ async def show_except_users(update: Update, _context: ContextTypes.DEFAULT_TYPE)
             await update.message.reply_html(text=f"👤 {message}")
     else:
         await update.message.reply_html(
-            text=("❌ <b>هیچ کاربر استثنایی یافت نشد!</b>\n\n"
-                  "برای افزودن کاربر به لیست استثنا از دستور /set_except_user استفاده کنید."),
+            text=(
+                "❌ <b>هیچ کاربر استثنایی یافت نشد!</b>\n\n"
+                "برای افزودن کاربر به لیست استثنا از دستور /set_except_user استفاده کنید."
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
     return ConversationHandler.END
@@ -735,9 +788,11 @@ async def get_general_limit_number(update: Update, _context: ContextTypes.DEFAUL
         return check
 
     await update.message.reply_html(
-        text=("📈 <b>تنظیم محدودیت عمومی</b>\n\n"
-              "🔢 لطفاً تعداد محدودیت عمومی را وارد کنید:\n\n"
-              "💡 <b>نکته:</b> این محدودیت برای کاربرانی که در لیست محدودیت ویژه نیستند اعمال می‌شود."),
+        text=(
+            "📈 <b>تنظیم محدودیت عمومی</b>\n\n"
+            "🔢 لطفاً تعداد محدودیت عمومی را وارد کنید:\n\n"
+            "💡 <b>نکته:</b> این محدودیت برای کاربرانی که در لیست محدودیت ویژه نیستند اعمال می‌شود."
+        ),
         reply_markup=ReplyKeyboardRemove(),
     )
     return GET_GENERAL_LIMIT_NUMBER
@@ -749,9 +804,11 @@ async def get_general_limit_number_handler(update: Update, _context: ContextType
         limit_number = int(update.message.text.strip())
     except ValueError:
         await update.message.reply_html(
-            text=("❌ <b>ورودی نامعتبر!</b>\n\n"
-                  f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
-                  "لطفاً دوباره تلاش کنید: <b>/set_general_limit_number</b>"),
+            text=(
+                "❌ <b>ورودی نامعتبر!</b>\n\n"
+                f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
+                "لطفاً دوباره تلاش کنید: <b>/set_general_limit_number</b>"
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
         return ConversationHandler.END
@@ -771,9 +828,11 @@ async def get_check_interval(update: Update, _context: ContextTypes.DEFAULT_TYPE
         return check
 
     await update.message.reply_html(
-        text=("⏱️ <b>تنظیم فاصله بررسی</b>\n\n"
-              "🕐 لطفاً فاصله زمانی بررسی را وارد کنید:\nمثال: <code>240</code>\n\n"
-              "💡 <b>توصیه:</b> مقدار 240 ثانیه پیشنهاد می‌شود."),
+        text=(
+            "⏱️ <b>تنظیم فاصله بررسی</b>\n\n"
+            "🕐 لطفاً فاصله زمانی بررسی را وارد کنید:\nمثال: <code>240</code>\n\n"
+            "💡 <b>توصیه:</b> مقدار 240 ثانیه پیشنهاد می‌شود."
+        ),
         reply_markup=ReplyKeyboardRemove(),
     )
     return GET_CHECK_INTERVAL
@@ -785,9 +844,11 @@ async def get_check_interval_handler(update: Update, _context: ContextTypes.DEFA
         check_interval = int(update.message.text.strip())
     except ValueError:
         await update.message.reply_html(
-            text=("❌ <b>ورودی نامعتبر!</b>\n\n"
-                  f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
-                  "لطفاً دوباره تلاش کنید: <b>/set_check_interval</b>"),
+            text=(
+                "❌ <b>ورودی نامعتبر!</b>\n\n"
+                f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
+                "لطفاً دوباره تلاش کنید: <b>/set_check_interval</b>"
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
         return ConversationHandler.END
@@ -807,9 +868,11 @@ async def get_time_to_active_users(update: Update, _context: ContextTypes.DEFAUL
         return check
 
     await update.message.reply_html(
-        text=("🕐 <b>تنظیم زمان فعالیت کاربران</b>\n\n"
-              "⏳ لطفاً زمان فعال بودن کاربران را وارد کنید:\nمثال: <code>600</code>\n\n"
-              "💡 <b>نکته:</b> این مقدار بر حسب ثانیه است."),
+        text=(
+            "🕐 <b>تنظیم زمان فعالیت کاربران</b>\n\n"
+            "⏳ لطفاً زمان فعال بودن کاربران را وارد کنید:\nمثال: <code>600</code>\n\n"
+            "💡 <b>نکته:</b> این مقدار بر حسب ثانیه است."
+        ),
         reply_markup=ReplyKeyboardRemove(),
     )
     return GET_TIME_TO_ACTIVE_USERS
@@ -821,9 +884,11 @@ async def get_time_to_active_users_handler(update: Update, _context: ContextType
         time_to_active_users = int(update.message.text.strip())
     except ValueError:
         await update.message.reply_html(
-            text=("❌ <b>ورودی نامعتبر!</b>\n\n"
-                  f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
-                  "لطفاً دوباره تلاش کنید: <b>/set_time_to_active_users</b>"),
+            text=(
+                "❌ <b>ورودی نامعتبر!</b>\n\n"
+                f"مقدار وارد شده: <code>{update.message.text.strip()}</code>\n"
+                "لطفاً دوباره تلاش کنید: <b>/set_time_to_active_users</b>"
+            ),
             reply_markup=MAIN_KEYBOARD,
         )
         return ConversationHandler.END
@@ -834,24 +899,6 @@ async def get_time_to_active_users_handler(update: Update, _context: ContextType
         reply_markup=MAIN_KEYBOARD,
     )
     return ConversationHandler.END
-
-
-# =========================
-# Brand card: SperNet
-# =========================
-async def spernet_info(update: Update, _context: ContextTypes.DEFAULT_TYPE):
-    """نمایش کارت برند سپرنت (مینیمال و تمیز)."""
-    await update.message.reply_html(
-        text=(
-            "🛡️ <b>سپرنت</b>\n"
-            "راهکار مدیریت و پایش هوشمند کاربران.\n"
-            "— نسخه‌ی ربات: <b>1.0</b>\n\n"
-            "برای شروع: /start\n"
-            "تنظیمات سریع: /create_config\n"
-            "پشتیبان‌گیری: /backup\n"
-        ),
-        reply_markup=MAIN_KEYBOARD,
-    )
 
 
 # =========================
@@ -939,10 +986,12 @@ async def handle_keyboard_commands(update: Update, context: ContextTypes.DEFAULT
         )
 
     elif text in ["✅ بله", "❌ خیر"]:
+        # تبدیل به yes/no برای سازگاری با get_confirmation
         update.message.text = "yes" if text == "✅ بله" else "no"
         await get_confirmation(update, context)
 
     else:
+        # اگر متن آزاد بود و با هیچ دکمه‌ای مچ نشد، راهنما را نشان بده
         await start(update, context)
 
 
@@ -958,7 +1007,7 @@ application.add_handler(CommandHandler("admins_list", admins_list))
 application.add_handler(CommandHandler("show_except_users", show_except_users))
 application.add_handler(CommandHandler("spernet", spernet_info))
 
-# محاوره‌های چندمرحله‌ای
+# محاوره‌های چندمرحله‌ای (با Regex برای ورودی‌های عددی)
 application.add_handler(
     ConversationHandler(
         entry_points=[CommandHandler("create_config", create_config)],
@@ -1051,42 +1100,33 @@ application.add_handler(
     )
 )
 
+application.add_handler(
+    ConversationHandler(
+        entry_points=[CommandHandler("add_admin", add_admin)],
+        states={GET_CHAT_ID: [MessageHandler(filters.Regex(r'^\d+$'), get_chat_id)]},
+        fallbacks=[CommandHandler("start", start)],
+    )
+)
+
+application.add_handler(
+    ConversationHandler(
+        entry_points=[CommandHandler("remove_admin", remove_admin)],
+        states={GET_CHAT_ID_TO_REMOVE: [MessageHandler(filters.Regex(r'^\d+$'), get_chat_id_to_remove)]},
+        fallbacks=[CommandHandler("start", start)],
+    )
+)
+
+application.add_handler(
+    ConversationHandler(
+        entry_points=[CommandHandler("backup", send_backup)],
+        states={},
+        fallbacks=[CommandHandler("start", start)],
+    )
+)
+
 # Unknown COMMAND → برگرد به راهنما
 unknown_handler_command = MessageHandler(filters.COMMAND, start)
 application.add_handler(unknown_handler_command)
 
-
-# =========================
-# Resilient runner (auto-reconnect + backoff)
-# =========================
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s"
-    )
-
-    backoff = 5  # ثانیه
-    while True:
-        try:
-            logging.info("Starting bot polling...")
-            application.run_polling(
-                stop_signals=None,      # مدیریت سیگنال‌ها به عهده خودمان
-                close_loop=False,       # رویدادلوپ باز بماند تا ری‌استارت ساده باشد
-                drop_pending_updates=False
-            )
-            # اگر polling طبیعی متوقف شد، کمی صبر و دوباره اجرا
-            backoff = 5
-            logging.info("Bot stopped gracefully. Restarting in 5s...")
-            time.sleep(5)
-
-        except (NetworkError, TimedOut, RetryAfter) as e:
-            logging.warning("Transient error: %s. Retry in %ss", e, backoff)
-            time.sleep(backoff)
-            backoff = min(backoff * 2, 300)  # سقف ۵ دقیقه
-            continue
-
-        except Exception as e:
-            logging.exception("Fatal error: %s. Restarting in 30s", e)
-            time.sleep(30)
-            backoff = 5
-            continue
+    application.run_polling()
