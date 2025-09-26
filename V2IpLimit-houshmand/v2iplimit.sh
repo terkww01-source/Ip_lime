@@ -25,9 +25,11 @@ download_program() {
 
     if [ "$architecture" == "x86_64" ]; then
         url="https://github.com/terkww01-source/Ip_lime/raw/main/V2IpLimit-houshmand/v2iplimit_amd64_linux.bin"
+
         filename="v2iplimit_amd64.bin"
     elif [ "$architecture" == "aarch64" ]; then
-        url="https://github.com/terkww01-source/Ip_lime/raw/main/V2IpLimit-houshmand/v2iplimit_arm64_linux.bin"
+        url="https://github.com/terkww01-source/Ip_lime/raw/main/V2IpLimit-houshmand/v2iplimit_amd64_linux.bin"
+
         filename="v2iplimit_arm64.bin"
     else
         echo "Unsupported architecture: $architecture"
